@@ -1,0 +1,16 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Matthias Bauer"
+            }
+        ],
+        "Category": "Appearance",
+        "Description": "Draws a colored outline around windows with the Keep Above property enabled",
+        "EnabledByDefault": false,
+        "License": "GPL-3.0+",
+        "Name": "Keep Above Outline",
+        "Version": "1.0"
+    },
+    "X-KDE-ConfigModule": "kwin_keep-above-outline_config"
+}
