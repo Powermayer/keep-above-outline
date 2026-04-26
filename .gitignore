@@ -1,0 +1,52 @@
+# CMake
+build/
+build-*/
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+install_manifest.txt
+Makefile
+CTestTestfile.cmake
+_deps/
+compile_commands.json
+
+# Qt / KDE generated files
+moc_*.cpp
+moc_*.h
+ui_*.h
+qrc_*.cpp
+*.moc
+*.qrc.depends
+*.qm
+*.user
+*.user.*
+*.autosave
+
+# Compiled binaries / objects
+*.o
+*.obj
+*.so
+*.so.*
+*.a
+*.dylib
+*.dll
+*.exe
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.kdev4/
+*.kdev4
+.kateproject
+.kateproject.d/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code workspace state
+.claude/
