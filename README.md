@@ -56,14 +56,6 @@ cmake --build build
 sudo cmake --install build
 ```
 
-After installation, restart KWin so the new effect is picked up:
-
-```sh
-kwin_wayland --replace &   # on Wayland
-# or
-kwin_x11 --replace &       # on X11
-```
-
 ## Enabling the effect
 
 1. Open **System Settings → Window Management → Desktop Effects**.
