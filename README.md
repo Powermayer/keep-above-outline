@@ -4,6 +4,10 @@ A KWin effect for KDE Plasma 6 that draws a colored outline around any window
 that has the **Keep Above** property enabled, making it easy to spot pinned
 windows at a glance.
 
+![Keep Above Outline in action](screenshots/keep-above-outline.gif)
+
+![Configuration dialog](screenshots/keep-above-outline-config.png)
+
 ## Features
 
 - Outlines every window marked *Keep Above* with a configurable border.
@@ -20,8 +24,24 @@ windows at a glance.
 - A C++20 compiler
 - CMake ≥ 3.20
 
-On Arch / CachyOS the relevant packages are `extra-cmake-modules`,
-`kwin`, `kcmutils`, `kconfigwidgets`, and `qt6-base`.
+**Arch / CachyOS / Manjaro**
+```sh
+sudo pacman -S extra-cmake-modules kwin kcmutils kconfigwidgets qt6-base
+```
+
+**Fedora / openSUSE Tumbleweed**
+```sh
+# Fedora
+sudo dnf install extra-cmake-modules kwin-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-qtbase-devel
+
+# openSUSE Tumbleweed
+sudo zypper install extra-cmake-modules kwin6-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-base-devel
+```
+
+**Debian / Ubuntu (KDE Neon, Kubuntu)**
+```sh
+sudo apt install extra-cmake-modules kwin-dev libkf6kcmutils-dev libkf6configwidgets-dev qt6-base-dev
+```
 
 ## Building
 
@@ -73,6 +93,10 @@ Settings are stored in `kwinrc` under the `[Effect-keep-above-outline]` group.
 ## License
 
 GPL-3.0-or-later. See [LICENSE](LICENSE) for the full text and the SPDX headers in the source files.
+
+## Disclaimer
+
+Parts of this project were written with the assistance of AI (Claude by Anthropic).
 
 ## Author
 
