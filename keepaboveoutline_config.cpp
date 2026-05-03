@@ -6,6 +6,7 @@
 #include "keepaboveoutline_config.h"
 #include "ui_keepaboveoutline_config.h"
 
+#include <KColorScheme>
 #include <KConfigSkeleton>
 #include <KPluginFactory>
 
@@ -16,6 +17,13 @@ KeepAboveOutlineConfig::KeepAboveOutlineConfig(QObject *parent, const KPluginMet
     , m_ui(new Ui::KeepAboveOutlineConfigForm)
 {
     m_ui->setupUi(widget());
+
+    QPalette infoPalette = m_ui->label_info->palette();
+    const QColor neutralText = KColorScheme(QPalette::Active, KColorScheme::Window)
+                                   .foreground(KColorScheme::NeutralText)
+                                   .color();
+    infoPalette.setColor(QPalette::WindowText, neutralText);
+    m_ui->label_info->setPalette(infoPalette);
 
     auto *config = new KConfigSkeleton(QStringLiteral("kwinrc"), this);
     config->setCurrentGroup(QStringLiteral("Effect-keep-above-outline"));
