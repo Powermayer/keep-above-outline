@@ -1,0 +1,67 @@
+Keep Above Outline - Installation Guide
+========================================
+
+REQUIREMENTS
+------------
+- KDE Plasma 6 / KWin 6
+- Qt 6 (Core, Gui, Widgets, Quick)
+- KF6 (CoreAddons, ConfigWidgets, KCMUtils)
+- Extra CMake Modules (ECM)
+- C++20 compiler (GCC or Clang)
+- CMake >= 3.20
+
+
+INSTALL DEPENDENCIES
+--------------------
+
+Arch / CachyOS / Manjaro:
+  sudo pacman -S extra-cmake-modules kwin kcmutils kconfigwidgets qt6-base
+
+Debian / Ubuntu (KDE Neon, Kubuntu):
+  sudo apt install extra-cmake-modules kwin-dev libkf6kcmutils-dev libkf6configwidgets-dev qt6-base-dev
+
+Fedora:
+  sudo dnf install extra-cmake-modules kwin-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-qtbase-devel
+
+openSUSE Tumbleweed:
+  sudo zypper install extra-cmake-modules kwin6-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-base-devel
+
+
+BUILD (Run commands from the project root folder)
+-----
+  cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+  cmake --build build
+
+
+INSTALL
+-------
+  sudo cmake --install build
+
+
+ENABLE THE EFFECT
+-----------------
+1. Open System Settings -> Window Management -> Desktop Effects.
+2. Find "Keep Above Outline" under Appearance.
+3. Tick the checkbox to enable it.
+4. Click the gear icon to configure color, border width, and corner radius.
+
+
+UNINSTALL
+---------
+  sudo cmake --install build --component Unspecified -- uninstall
+
+  Or manually remove the installed files listed in build/install_manifest.txt:
+  sudo xargs rm -f < build/install_manifest.txt
+
+
+CONFIGURATION
+-------------
+Settings are stored in kwinrc under the [Effect-keep-above-outline] group.
+You can also edit them directly:
+  ~/.config/kwinrc
+
+Options:
+  UseAccentColor  - Follow the current Plasma accent color (default: true)
+  CustomColor     - Color used when UseAccentColor is disabled (default: #3daee9)
+  BorderWidth     - Outline thickness in pixels, 1-20 (default: 3)
+  BorderRadius    - Corner radius in pixels, 0-30 (default: 0)

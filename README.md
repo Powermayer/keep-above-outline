@@ -24,24 +24,27 @@ windows at a glance.
 - A C++20 compiler
 - CMake ≥ 3.20
 
+
 **Arch / CachyOS / Manjaro**
 ```sh
 sudo pacman -S extra-cmake-modules kwin kcmutils kconfigwidgets qt6-base
-```
-
-**Fedora / openSUSE Tumbleweed**
-```sh
-# Fedora
-sudo dnf install extra-cmake-modules kwin-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-qtbase-devel
-
-# openSUSE Tumbleweed
-sudo zypper install extra-cmake-modules kwin6-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-base-devel
 ```
 
 **Debian / Ubuntu (KDE Neon, Kubuntu)**
 ```sh
 sudo apt install extra-cmake-modules kwin-dev libkf6kcmutils-dev libkf6configwidgets-dev qt6-base-dev
 ```
+
+**Fedora**
+```sh
+sudo dnf install extra-cmake-modules kwin-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-qtbase-devel
+```
+
+**openSUSE Tumbleweed**
+```sh
+sudo zypper install extra-cmake-modules kwin6-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-base-devel
+```
+
 
 ## Building
 
