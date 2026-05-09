@@ -1,6 +1,7 @@
 # CMake
 build/
 build-*/
+local/
 CMakeCache.txt
 CMakeFiles/
 CMakeScripts/
