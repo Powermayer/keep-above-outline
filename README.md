@@ -4,7 +4,7 @@ A KWin effect for KDE Plasma 6 that draws a colored outline around any window
 that has the **Keep Above** property enabled, making it easy to spot pinned
 windows at a glance.
 
-![Keep Above Outline in action](screenshots/keep-above-outline-sample.gif)
+![Keep Above Outline in action](screenshots/keep-above-outline_sample.gif)
 
 ![Configuration dialog](screenshots/keep-above-outline-config.png)
 
