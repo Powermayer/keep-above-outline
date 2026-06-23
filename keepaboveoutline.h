@@ -28,8 +28,7 @@ public:
     void reconfigure(ReconfigureFlags flags) override;
 
     void prePaintWindow(RenderView *view, EffectWindow *w,
-                        WindowPrePaintData &data,
-                        std::chrono::milliseconds presentTime) override;
+                        WindowPrePaintData &data) override;
 
     void paintWindow(const RenderTarget &renderTarget,
                      const RenderViewport &viewport,

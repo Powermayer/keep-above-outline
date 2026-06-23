@@ -159,23 +159,15 @@ bool KeepAboveOutlineEffect::isActive() const
 }
 
 void KeepAboveOutlineEffect::prePaintWindow(RenderView *view, EffectWindow *w,
-                                            WindowPrePaintData &data,
-                                            std::chrono::milliseconds presentTime)
+                                            WindowPrePaintData &data)
 {
     if (m_keepAboveWindows.contains(w)) {
-        const qreal expand = m_width;
-        const QRectF geo = w->frameGeometry();
-        const QRectF expanded = geo.adjusted(-expand, -expand, expand, expand);
-
-        const qreal s = w->screen()->scale();
-        const int x = qFloor(expanded.x() * s);
-        const int y = qFloor(expanded.y() * s);
-        const int right = qCeil(expanded.right() * s);
-        const int bottom = qCeil(expanded.bottom() * s);
-
-        data.devicePaint += Region(Rect(x, y, right - x, bottom - y));
+        // The outline is drawn outside the window's own geometry. Marking the
+        // window transformed tells the scene not to occlusion-clip it to its
+        // bounds, so our extra border pixels survive to paintWindow().
+        data.setTransformed();
     }
-    effects->prePaintWindow(view, w, data, presentTime);
+    effects->prePaintWindow(view, w, data);
 }
 
 void KeepAboveOutlineEffect::paintWindow(const RenderTarget &renderTarget,

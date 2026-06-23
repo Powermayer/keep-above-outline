@@ -21,28 +21,29 @@ windows at a glance.
 - Qt 6 (Core, Gui, Widgets, Quick)
 - KF6 (CoreAddons, ConfigWidgets, KCMUtils)
 - Extra CMake Modules (ECM)
+- Vulkan headers (required transitively by KWin 6.7+)
 - A C++20 compiler
 - CMake ≥ 3.20
 
 
 **Arch / CachyOS / Manjaro**
 ```sh
-sudo pacman -S extra-cmake-modules kwin kcmutils kconfigwidgets qt6-base
+sudo pacman -S extra-cmake-modules kwin kcmutils kconfigwidgets qt6-base vulkan-headers
 ```
 
 **Debian / Ubuntu (KDE Neon, Kubuntu)**
 ```sh
-sudo apt install extra-cmake-modules kwin-dev libkf6kcmutils-dev libkf6configwidgets-dev qt6-base-dev
+sudo apt install extra-cmake-modules kwin-dev libkf6kcmutils-dev libkf6configwidgets-dev qt6-base-dev libvulkan-dev
 ```
 
 **Fedora**
 ```sh
-sudo dnf install extra-cmake-modules kwin-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-qtbase-devel
+sudo dnf install extra-cmake-modules kwin-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-qtbase-devel vulkan-headers
 ```
 
 **openSUSE Tumbleweed**
 ```sh
-sudo zypper install extra-cmake-modules kwin6-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-base-devel
+sudo zypper install extra-cmake-modules kwin6-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-base-devel vulkan-headers
 ```
 
 
