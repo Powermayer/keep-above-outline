@@ -11,10 +11,12 @@
 #include <opengl/glvertexbuffer.h>
 #include <core/rendertarget.h>
 #include <core/renderviewport.h>
+#include <core/rect.h>
 #include <KConfigGroup>
 #include <QGuiApplication>
 #include <QPalette>
 #include <QtMath>
+#include <utility>
 
 namespace KWin
 {
@@ -28,6 +30,10 @@ KeepAboveOutlineEffect::KeepAboveOutlineEffect()
 
     const auto windows = effects->stackingOrder();
     for (EffectWindow *w : windows) {
+        connect(w, &EffectWindow::windowKeepAboveChanged,
+                this, &KeepAboveOutlineEffect::slotKeepAboveChanged);
+        connect(w, &EffectWindow::windowFrameGeometryChanged,
+                this, &KeepAboveOutlineEffect::slotWindowFrameGeometryChanged);
         if (w->keepAbove() && !w->isDesktop() && !w->isDock()) {
             m_keepAboveWindows.insert(w);
         }
@@ -67,10 +73,12 @@ void KeepAboveOutlineEffect::slotWindowAdded(EffectWindow *w)
 {
     connect(w, &EffectWindow::windowKeepAboveChanged,
             this, &KeepAboveOutlineEffect::slotKeepAboveChanged);
+    connect(w, &EffectWindow::windowFrameGeometryChanged,
+            this, &KeepAboveOutlineEffect::slotWindowFrameGeometryChanged);
 
     if (w->keepAbove() && !w->isDesktop() && !w->isDock()) {
         m_keepAboveWindows.insert(w);
-        w->addRepaintFull();
+        effects->addRepaint(expandedGeometryFor(w));
     }
 }
 
@@ -149,8 +157,32 @@ void KeepAboveOutlineEffect::slotKeepAboveChanged(EffectWindow *w)
         m_keepAboveWindows.insert(w);
     } else {
         m_keepAboveWindows.remove(w);
+        m_lastGeometry.remove(w);
+        m_outlineCache.remove(w);
     }
-    w->addRepaintFull();
+    // Repaint the expanded area so the outline appears (or its leftover pixels
+    // are cleared when Keep Above is turned off).
+    effects->addRepaint(expandedGeometryFor(w));
+}
+
+void KeepAboveOutlineEffect::slotWindowFrameGeometryChanged(EffectWindow *w,
+                                                            const QRectF &oldGeometry)
+{
+    if (!m_keepAboveWindows.contains(w)) {
+        return;
+    }
+    const qreal bw = m_width;
+    // Repaint the old location to erase the previous outline, and the new one
+    // to draw it. Without setTransformed there is nothing else extending the
+    // window's damage out to the border, so we schedule it explicitly.
+    effects->addRepaint(oldGeometry.adjusted(-bw - 1, -bw - 1, bw + 1, bw + 1));
+    effects->addRepaint(expandedGeometryFor(w));
+}
+
+QRectF KeepAboveOutlineEffect::expandedGeometryFor(EffectWindow *w) const
+{
+    const qreal bw = m_width;
+    return w->frameGeometry().adjusted(-bw - 1, -bw - 1, bw + 1, bw + 1);
 }
 
 bool KeepAboveOutlineEffect::isActive() const
@@ -158,39 +190,44 @@ bool KeepAboveOutlineEffect::isActive() const
     return !m_keepAboveWindows.isEmpty();
 }
 
-void KeepAboveOutlineEffect::prePaintWindow(RenderView *view, EffectWindow *w,
-                                            WindowPrePaintData &data)
+void KeepAboveOutlineEffect::prePaintScreen(ScreenPrePaintData &data)
 {
-    if (m_keepAboveWindows.contains(w)) {
-        // The outline is drawn outside the window's own geometry. Marking the
-        // window transformed tells the scene not to occlusion-clip it to its
-        // bounds, so our extra border pixels survive to paintWindow().
-        data.setTransformed();
+    // Make sure the border area around each Keep Above window is part of the
+    // region being painted this frame, otherwise our outline (which sits just
+    // outside the window) would be scissored away.
+    for (EffectWindow *w : std::as_const(m_keepAboveWindows)) {
+        data.paint += expandedGeometryFor(w).toRect();
     }
-    effects->prePaintWindow(view, w, data);
+    effects->prePaintScreen(data);
 }
 
-void KeepAboveOutlineEffect::paintWindow(const RenderTarget &renderTarget,
+void KeepAboveOutlineEffect::paintScreen(const RenderTarget &renderTarget,
                                          const RenderViewport &viewport,
-                                         EffectWindow *w,
                                          int mask,
-                                         const Region &region,
-                                         WindowPaintData &data)
+                                         const Region &deviceRegion,
+                                         LogicalOutput *screen)
 {
-    effects->paintWindow(renderTarget, viewport, w, mask, region, data);
+    effects->paintScreen(renderTarget, viewport, mask, deviceRegion, screen);
 
-    if (m_keepAboveWindows.contains(w)) {
+    if (m_keepAboveWindows.isEmpty()) {
+        return;
+    }
+
+    // Draw the outlines on top of the painted windows, walking the stacking
+    // order so a higher Keep Above window's outline lands above a lower one's.
+    const auto stacking = effects->stackingOrder();
+    for (EffectWindow *w : stacking) {
+        if (!m_keepAboveWindows.contains(w)) {
+            continue;
+        }
+
         const QRectF currentGeo = w->frameGeometry();
-        const QRectF lastGeo = m_lastGeometry.value(w, QRectF());
-
-        if (currentGeo != lastGeo) {
+        if (!m_outlineCache.contains(w) || m_lastGeometry.value(w) != currentGeo) {
             cacheWindowOutline(w, currentGeo);
             m_lastGeometry[w] = currentGeo;
         }
 
-        if (m_outlineCache.contains(w)) {
-            renderOutline(renderTarget, viewport, m_outlineCache[w], region);
-        }
+        renderOutline(renderTarget, viewport, m_outlineCache[w], deviceRegion);
     }
 }
 

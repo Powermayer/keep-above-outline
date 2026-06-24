@@ -27,15 +27,19 @@ public:
 
     void reconfigure(ReconfigureFlags flags) override;
 
-    void prePaintWindow(RenderView *view, EffectWindow *w,
-                        WindowPrePaintData &data) override;
+    // The outline is drawn in a screen-level pass (after all windows) rather
+    // than per-window. Drawing per window required marking the window
+    // transformed so the border could spill outside its bounds, but the
+    // PAINT_WINDOW_TRANSFORMED flag makes KWin's blur/background-contrast
+    // effects skip the window — which cleared the blurred background behind
+    // Keep Above windows. Painting at screen level avoids the flag entirely.
+    void prePaintScreen(ScreenPrePaintData &data) override;
 
-    void paintWindow(const RenderTarget &renderTarget,
+    void paintScreen(const RenderTarget &renderTarget,
                      const RenderViewport &viewport,
-                     EffectWindow *w,
                      int mask,
-                     const Region &region,
-                     WindowPaintData &data) override;
+                     const Region &deviceRegion,
+                     LogicalOutput *screen) override;
 
     bool isActive() const override;
 
@@ -45,8 +49,12 @@ private Q_SLOTS:
     void slotKeepAboveChanged(KWin::EffectWindow *w);
     void slotWindowAdded(KWin::EffectWindow *w);
     void slotWindowDeleted(KWin::EffectWindow *w);
+    void slotWindowFrameGeometryChanged(KWin::EffectWindow *w,
+                                        const QRectF &oldGeometry);
 
 private:
+    QRectF expandedGeometryFor(EffectWindow *w) const;
+
     void generateRoundedRectStrip(const QRectF &outer, qreal outerRadius,
                                   const QRectF &inner, qreal innerRadius,
                                   qreal scale,
