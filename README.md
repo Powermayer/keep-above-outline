@@ -92,7 +92,7 @@ GPL-3.0-or-later. See [LICENSE](LICENSE) for the full text and the SPDX headers 
 
 ## Disclaimer
 
-Parts of this project were written with the assistance of AI (Claude by Anthropic).
+Parts of this project were written with the assistance of AI.
 
 ## Author
 

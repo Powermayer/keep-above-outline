@@ -36,8 +36,11 @@
    </item>
    <item row="1" column="1">
     <widget class="KColorButton" name="kcfg_CustomColor">
+     <property name="alphaChannelEnabled">
+      <bool>true</bool>
+     </property>
      <property name="color">
-      <color>
+      <color alpha="255">
        <red>61</red>
        <green>174</green>
        <blue>233</blue>

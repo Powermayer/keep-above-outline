@@ -34,6 +34,8 @@ KeepAboveOutlineEffect::KeepAboveOutlineEffect()
                 this, &KeepAboveOutlineEffect::slotKeepAboveChanged);
         connect(w, &EffectWindow::windowFrameGeometryChanged,
                 this, &KeepAboveOutlineEffect::slotWindowFrameGeometryChanged);
+        connect(w, &EffectWindow::minimizedChanged,
+                this, &KeepAboveOutlineEffect::slotWindowMinimizedChanged);
         if (w->keepAbove() && !w->isDesktop() && !w->isDock()) {
             m_keepAboveWindows.insert(w);
         }
@@ -75,6 +77,8 @@ void KeepAboveOutlineEffect::slotWindowAdded(EffectWindow *w)
             this, &KeepAboveOutlineEffect::slotKeepAboveChanged);
     connect(w, &EffectWindow::windowFrameGeometryChanged,
             this, &KeepAboveOutlineEffect::slotWindowFrameGeometryChanged);
+    connect(w, &EffectWindow::minimizedChanged,
+            this, &KeepAboveOutlineEffect::slotWindowMinimizedChanged);
 
     if (w->keepAbove() && !w->isDesktop() && !w->isDock()) {
         m_keepAboveWindows.insert(w);
@@ -85,6 +89,7 @@ void KeepAboveOutlineEffect::slotWindowAdded(EffectWindow *w)
 void KeepAboveOutlineEffect::slotWindowDeleted(EffectWindow *w)
 {
     m_keepAboveWindows.remove(w);
+    m_minimizedWindows.remove(w);
     m_lastGeometry.remove(w);
     m_outlineCache.remove(w);
 }
@@ -130,7 +135,21 @@ void KeepAboveOutlineEffect::renderOutline(const RenderTarget &renderTarget,
                                            RenderingIntent::Perceptual);
     binder.shader()->setUniform(GLShader::ColorUniform::Color, cache.borderColor);
 
+    // The custom color may carry an alpha component, so blend the outline over
+    // whatever is already on screen. The color is passed straight (not
+    // premultiplied), which is why we use SRC_ALPHA here. Opaque colours don't
+    // need blending, so skip the state change for them.
+    const bool translucent = cache.borderColor.alpha() < 255;
+    if (translucent) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+
     vbo->render(clipRegion, GL_TRIANGLES, true);
+
+    if (translucent) {
+        glDisable(GL_BLEND);
+    }
 }
 
 void KeepAboveOutlineEffect::cacheWindowOutline(EffectWindow *w, const QRectF &geo)
@@ -157,6 +176,7 @@ void KeepAboveOutlineEffect::slotKeepAboveChanged(EffectWindow *w)
         m_keepAboveWindows.insert(w);
     } else {
         m_keepAboveWindows.remove(w);
+        m_minimizedWindows.remove(w);
         m_lastGeometry.remove(w);
         m_outlineCache.remove(w);
     }
@@ -179,6 +199,16 @@ void KeepAboveOutlineEffect::slotWindowFrameGeometryChanged(EffectWindow *w,
     effects->addRepaint(expandedGeometryFor(w));
 }
 
+void KeepAboveOutlineEffect::slotWindowMinimizedChanged(EffectWindow *w)
+{
+    if (!m_keepAboveWindows.contains(w)) {
+        return;
+    }
+    // Minimizing hides the outline and un-minimizing brings it back; in both
+    // cases the border area needs to be repainted.
+    effects->addRepaint(expandedGeometryFor(w));
+}
+
 QRectF KeepAboveOutlineEffect::expandedGeometryFor(EffectWindow *w) const
 {
     const qreal bw = m_width;
@@ -192,10 +222,25 @@ bool KeepAboveOutlineEffect::isActive() const
 
 void KeepAboveOutlineEffect::prePaintScreen(ScreenPrePaintData &data)
 {
-    // Make sure the border area around each Keep Above window is part of the
-    // region being painted this frame, otherwise our outline (which sits just
-    // outside the window) would be scissored away.
     for (EffectWindow *w : std::as_const(m_keepAboveWindows)) {
+        if (w->isMinimized()) {
+            // The outline sits in a band just *outside* the window's rectangle.
+            // When a window is minimized KWin only damages the window rectangle
+            // itself, not that surrounding band, so the outline would be left
+            // behind as a ghost. Repaint the band once, in the same pass the
+            // minimize produces, so the stale outline is painted over. We don't
+            // draw an outline for minimized windows in paintScreen(), so this
+            // just clears it.
+            if (!m_minimizedWindows.contains(w)) {
+                m_minimizedWindows.insert(w);
+                data.paint += expandedGeometryFor(w).toRect();
+            }
+            continue;
+        }
+
+        m_minimizedWindows.remove(w);
+        // Make sure the border area is part of the region being painted this
+        // frame, otherwise our outline would be scissored away.
         data.paint += expandedGeometryFor(w).toRect();
     }
     effects->prePaintScreen(data);
@@ -217,7 +262,7 @@ void KeepAboveOutlineEffect::paintScreen(const RenderTarget &renderTarget,
     // order so a higher Keep Above window's outline lands above a lower one's.
     const auto stacking = effects->stackingOrder();
     for (EffectWindow *w : stacking) {
-        if (!m_keepAboveWindows.contains(w)) {
+        if (!m_keepAboveWindows.contains(w) || w->isMinimized()) {
             continue;
         }
 

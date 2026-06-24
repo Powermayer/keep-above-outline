@@ -49,9 +49,24 @@ ENABLE THE EFFECT
 
 UNINSTALL
 ---------
-  sudo cmake --install build --component Unspecified -- uninstall
+CMake has no built-in uninstall command, so the two installed plugin files
+have to be removed by hand. Their location depends on the distro's Qt6 plugin
+directory:
 
-  Or manually remove the installed files listed in build/install_manifest.txt:
+Arch / CachyOS / Manjaro:
+  sudo rm -f /usr/lib/qt6/plugins/kwin/effects/plugins/keep-above-outline.so \
+             /usr/lib/qt6/plugins/kwin/effects/configs/kwin_keep-above-outline_config.so
+
+Fedora / openSUSE Tumbleweed:
+  sudo rm -f /usr/lib64/qt6/plugins/kwin/effects/plugins/keep-above-outline.so \
+             /usr/lib64/qt6/plugins/kwin/effects/configs/kwin_keep-above-outline_config.so
+
+Debian / Ubuntu (KDE Neon, Kubuntu):
+  sudo rm -f /usr/lib/x86_64-linux-gnu/qt6/plugins/kwin/effects/plugins/keep-above-outline.so \
+             /usr/lib/x86_64-linux-gnu/qt6/plugins/kwin/effects/configs/kwin_keep-above-outline_config.so
+
+Or, on any distro, remove exactly the files recorded when you ran
+"cmake --install build":
   sudo xargs rm -f < build/install_manifest.txt
 
 

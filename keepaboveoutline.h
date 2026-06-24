@@ -51,6 +51,7 @@ private Q_SLOTS:
     void slotWindowDeleted(KWin::EffectWindow *w);
     void slotWindowFrameGeometryChanged(KWin::EffectWindow *w,
                                         const QRectF &oldGeometry);
+    void slotWindowMinimizedChanged(KWin::EffectWindow *w);
 
 private:
     QRectF expandedGeometryFor(EffectWindow *w) const;
@@ -70,6 +71,10 @@ private:
     QColor resolveColor() const;
 
     QSet<EffectWindow *> m_keepAboveWindows;
+    // Keep Above windows we have already seen as minimized. Used to detect the
+    // transition into the minimized state so the now-stale outline band can be
+    // repainted away exactly once.
+    QSet<EffectWindow *> m_minimizedWindows;
     QMap<EffectWindow *, QRectF> m_lastGeometry;
     QMap<EffectWindow *, OutlineCache> m_outlineCache;
 
