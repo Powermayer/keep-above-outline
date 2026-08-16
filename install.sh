@@ -118,8 +118,8 @@ print_dependency_guidance()
             ;;
         opensuse)
             packages=(gcc-c++ cmake kf6-extra-cmake-modules qt6-base-devel
-                      qt6-declarative-devel kf6-coreaddons-devel
-                      kf6-config-devel kf6-kconfigwidgets-devel
+                      qt6-declarative-devel kf6-kcoreaddons-devel
+                      kf6-kconfig-devel kf6-kconfigwidgets-devel
                       kf6-kcmutils-devel vulkan-headers)
             (( include_wayland )) && packages+=(kwin6 kwin6-devel)
             (( include_x11 )) && packages+=(kwin6-x11 kwin6-x11-devel)

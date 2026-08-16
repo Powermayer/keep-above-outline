@@ -15,6 +15,11 @@ windows at a glance.
 - Adjustable border width (1–20 px) and corner radius (0–30 px).
 - Configurable through System Settings → Window Management → Desktop Effects.
 
+## Supported platforms
+
+- Wayland, X11
+- Plasma 6.4–6.7
+
 ## Requirements
 
 - KDE Plasma 6 / KWin 6 (Wayland)
@@ -27,12 +32,19 @@ windows at a glance.
 - A C++20 compiler for Wayland; the KWin X11 6.7 headers require C++23
 - CMake ≥ 3.20
 
-Wayland is the default and continuing KWin target. X11 support is limited to
-the final Plasma releases that provide the legacy compositor (6.4–6.7).
-Plasma 5.27 is not supported because it uses Qt 5, KF5, and older KWin APIs.
+## Guided build and install
 
-Install the common development dependencies and the packages for each backend
-you want to build:
+Run this script from the unzipped effect folder without elevated privileges.
+The script does not install anything itself. It builds the effect, reports
+missing dependencies, and provides the required terminal commands.
+
+```sh
+./install.sh
+```
+
+## Manual build and install
+
+### Dependencies
 
 **Arch / CachyOS / Manjaro**
 ```sh
@@ -57,49 +69,24 @@ sudo dnf install gcc-c++ cmake extra-cmake-modules qt6-qtbase-devel qt6-qtdeclar
 
 **openSUSE Tumbleweed**
 ```sh
-sudo zypper install gcc-c++ cmake kf6-extra-cmake-modules qt6-base-devel qt6-declarative-devel kf6-coreaddons-devel kf6-config-devel kf6-kconfigwidgets-devel kf6-kcmutils-devel vulkan-headers
+sudo zypper install gcc-c++ cmake kf6-extra-cmake-modules qt6-base-devel qt6-declarative-devel kf6-kcoreaddons-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcmutils-devel vulkan-headers
 # Wayland: kwin6 kwin6-devel
 # X11: kwin6-x11 kwin6-x11-devel
 ```
 
-Append the backend packages shown in the comments to the corresponding command.
-
-## Building
-
-The backend is selected explicitly at configure time. Wayland is the default:
+### Build and install (Wayland)
 
 ```sh
-cmake -B build-wayland -S . -DKWIN_BACKEND=WAYLAND -DCMAKE_BUILD_TYPE=Release
-cmake --build build-wayland
-```
-
-Build the legacy X11 plugin separately:
-
-```sh
-cmake -B build-x11 -S . -DKWIN_BACKEND=X11 -DCMAKE_BUILD_TYPE=Release
-cmake --build build-x11
-```
-
-Do not reuse a build directory for another backend. The two plugins link to
-different KWin libraries and install into different plugin namespaces.
-
-Alternatively, run the repository helper:
-
-```sh
-./install.sh
-```
-
-It checks dependencies and builds every installed supported compositor in
-`build-wayland` and/or `build-x11`. It runs without elevated privileges and
-does not install anything; after all builds succeed, it prints the exact
-installation command for you to run if desired.
-
-## Installing
-
-Install only the backend or backends you built:
-
-```sh
+cmake -B build-wayland -S . -DKWIN_BACKEND=WAYLAND -DCMAKE_BUILD_TYPE=Release &&
+cmake --build build-wayland &&
 sudo cmake --install build-wayland
+```
+
+### Build and install (X11)
+
+```sh
+cmake -B build-x11 -S . -DKWIN_BACKEND=X11 -DCMAKE_BUILD_TYPE=Release &&
+cmake --build build-x11 &&
 sudo cmake --install build-x11
 ```
 
