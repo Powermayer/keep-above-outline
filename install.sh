@@ -70,6 +70,16 @@ if package_installed "$x11_runtime"; then
     has_x11=1
 fi
 
+echo "Installed compositors:"
+if (( has_wayland )); then
+    echo -n "- Wayland ($wayland_runtime)"
+fi
+if (( has_x11 )); then
+    echo ", X11 ($x11_runtime)"
+fi
+
+echo "Checking dependencies ..."
+
 print_dependency_guidance()
 {
     local include_wayland=$has_wayland
@@ -162,11 +172,15 @@ EOF
 fi
 
 if (( dependencies_missing )); then
+    echo "-----------------------------------"
     echo "Dependencies missing, install with:"
     print_dependency_guidance
+    echo ""
     echo "- Run this script again after installing."
     exit 1
 fi
+
+echo "Building ..."
 
 declare -a build_directories=()
 declare -a backend_names=()
@@ -198,6 +212,7 @@ backend_summary=${backend_names[0]}
 for ((index = 1; index < ${#backend_names[@]}; ++index)); do
     backend_summary+=", ${backend_names[$index]}"
 done
+echo "-----------------------------------------------------"
 echo "Built successfully for: $backend_summary"
 echo "Install the effect with:"
 
