@@ -120,7 +120,8 @@ print_dependency_guidance()
             packages=(gcc-c++ cmake kf6-extra-cmake-modules qt6-base-devel
                       qt6-declarative-devel kf6-kcoreaddons-devel
                       kf6-kconfig-devel kf6-kconfigwidgets-devel
-                      kf6-kcmutils-devel vulkan-headers)
+                      kf6-kcmutils-devel kf6-kwindowsystem-devel
+                      wayland-devel libepoxy-devel libdrm-devel vulkan-headers)
             (( include_wayland )) && packages+=(kwin6 kwin6-devel)
             (( include_x11 )) && packages+=(kwin6-x11 kwin6-x11-devel)
             printf 'sudo zypper install'
@@ -156,15 +157,26 @@ find_package(KF6 REQUIRED COMPONENTS CoreAddons ConfigWidgets KCMUtils)
 find_package(${KWIN_PROBE_PACKAGE} REQUIRED)
 EOF
 
-    if (( has_wayland )) && ! cmake -S "$dependency_probe_dir/source" \
-        -B "$dependency_probe_dir/wayland" -DKWIN_PROBE_PACKAGE=KWin \
-        >/dev/null 2>&1; then
-        dependencies_missing=1
+    probe_backend_dependencies()
+    {
+        local backend_name=$1
+        local kwin_package=$2
+        local probe_log="$dependency_probe_dir/${backend_name,,}.log"
+
+        if ! cmake -S "$dependency_probe_dir/source" \
+            -B "$dependency_probe_dir/${backend_name,,}" \
+            -DKWIN_PROBE_PACKAGE="$kwin_package" >"$probe_log" 2>&1; then
+            dependencies_missing=1
+            echo "Dependency check failed for $backend_name:" >&2
+            sed 's/^/  /' "$probe_log" >&2
+        fi
+    }
+
+    if (( has_wayland )); then
+        probe_backend_dependencies Wayland KWin
     fi
-    if (( has_x11 )) && ! cmake -S "$dependency_probe_dir/source" \
-        -B "$dependency_probe_dir/x11" -DKWIN_PROBE_PACKAGE=KWinX11 \
-        >/dev/null 2>&1; then
-        dependencies_missing=1
+    if (( has_x11 )); then
+        probe_backend_dependencies X11 KWinX11
     fi
 
     cleanup_dependency_probe

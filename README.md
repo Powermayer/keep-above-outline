@@ -67,9 +67,9 @@ sudo dnf install gcc-c++ cmake extra-cmake-modules qt6-qtbase-devel qt6-qtdeclar
 # X11: kwin-x11 kwin-x11-devel
 ```
 
-**openSUSE Tumbleweed**
+**openSUSE Leap / Tumbleweed**
 ```sh
-sudo zypper install gcc-c++ cmake kf6-extra-cmake-modules qt6-base-devel qt6-declarative-devel kf6-kcoreaddons-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcmutils-devel vulkan-headers
+sudo zypper install gcc-c++ cmake kf6-extra-cmake-modules qt6-base-devel qt6-declarative-devel kf6-kcoreaddons-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcmutils-devel kf6-kwindowsystem-devel wayland-devel libepoxy-devel libdrm-devel vulkan-headers
 # Wayland: kwin6 kwin6-devel
 # X11: kwin6-x11 kwin6-x11-devel
 ```
