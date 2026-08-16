@@ -72,10 +72,10 @@ fi
 
 echo "Installed compositors:"
 if (( has_wayland )); then
-    echo -n "- Wayland ($wayland_runtime)"
+    echo "- Wayland ($wayland_runtime)"
 fi
 if (( has_x11 )); then
-    echo ", X11 ($x11_runtime)"
+    echo "- X11 ($x11_runtime)"
 fi
 
 echo "Checking dependencies ..."
@@ -112,7 +112,10 @@ print_dependency_guidance()
                       qt6-qtdeclarative-devel kf6-kcoreaddons-devel
                       kf6-kconfig-devel kf6-kconfigwidgets-devel
                       kf6-kcmutils-devel vulkan-headers)
-            (( include_wayland )) && packages+=(kwin kwin-devel)
+            # KWinConfig.cmake requires Wayland's Server component. Some
+            # Fedora-family kwin-devel packages, including AlmaLinux 10's, do
+            # not declare that dependency, so keep it explicit here.
+            (( include_wayland )) && packages+=(wayland-devel kwin kwin-devel)
             (( include_x11 )) && packages+=(kwin-x11 kwin-x11-devel)
             printf 'sudo dnf install'
             ;;

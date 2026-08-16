@@ -12,6 +12,7 @@ REQUIREMENTS
 - Qt 6 (Core, Gui, Widgets, Quick)
 - KF6 (CoreAddons, ConfigWidgets, KCMUtils)
 - Extra CMake Modules (ECM)
+- Wayland development headers when building for Wayland
 - Vulkan headers (required transitively by KWin 6.7+)
 - C++20 compiler for Wayland; KWin X11 6.7 requires C++23
 - CMake >= 3.20
@@ -96,4 +97,3 @@ Debian / Ubuntu (KDE Neon, Kubuntu):
              /usr/lib/x86_64-linux-gnu/qt6/plugins/kwin/effects/configs/kwin_keep-above-outline_config.so \
              /usr/lib/x86_64-linux-gnu/qt6/plugins/kwin-x11/effects/plugins/keep-above-outline.so \
              /usr/lib/x86_64-linux-gnu/qt6/plugins/kwin-x11/effects/configs/kwin_keep-above-outline_config.so
-

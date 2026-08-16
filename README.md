@@ -28,6 +28,7 @@ windows at a glance.
 - Qt 6 (Core, Gui, Widgets, Quick)
 - KF6 (CoreAddons, ConfigWidgets, KCMUtils)
 - Extra CMake Modules (ECM)
+- Wayland development headers when building the Wayland effect
 - Vulkan headers (required transitively by KWin 6.7+)
 - A C++20 compiler for Wayland; the KWin X11 6.7 headers require C++23
 - CMake ≥ 3.20
@@ -60,10 +61,10 @@ sudo apt install build-essential cmake extra-cmake-modules qt6-base-dev qt6-decl
 # X11: kwin-x11 kwin-x11-dev
 ```
 
-**Fedora**
+**Fedora / AlmaLinux / other Fedora-family distributions**
 ```sh
 sudo dnf install gcc-c++ cmake extra-cmake-modules qt6-qtbase-devel qt6-qtdeclarative-devel kf6-kcoreaddons-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcmutils-devel vulkan-headers
-# Wayland: kwin kwin-devel
+# Wayland: wayland-devel kwin kwin-devel
 # X11: kwin-x11 kwin-x11-devel
 ```
 
