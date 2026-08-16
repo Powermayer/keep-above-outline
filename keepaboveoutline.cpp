@@ -52,6 +52,8 @@ KeepAboveOutlineEffect::KeepAboveOutlineEffect()
             this, &KeepAboveOutlineEffect::slotWindowAdded);
     connect(effects, &EffectsHandler::windowDeleted,
             this, &KeepAboveOutlineEffect::slotWindowDeleted);
+    connect(effects, &EffectsHandler::showingDesktopChanged,
+            this, &KeepAboveOutlineEffect::slotShowingDesktopChanged);
 }
 
 bool KeepAboveOutlineEffect::supported()
@@ -113,7 +115,7 @@ void KeepAboveOutlineEffect::slotWindowDeleted(EffectWindow *w)
 {
     const bool popupWasOpen = m_openAppletPopups.remove(w);
     m_keepAboveWindows.remove(w);
-    m_minimizedWindows.remove(w);
+    m_suppressedWindows.remove(w);
     m_lastGeometry.remove(w);
     m_outlineCache.remove(w);
     if (popupWasOpen) {
@@ -230,7 +232,7 @@ void KeepAboveOutlineEffect::slotKeepAboveChanged(EffectWindow *w)
         m_keepAboveWindows.insert(w);
     } else {
         m_keepAboveWindows.remove(w);
-        m_minimizedWindows.remove(w);
+        m_suppressedWindows.remove(w);
         m_lastGeometry.remove(w);
         m_outlineCache.remove(w);
     }
@@ -263,6 +265,15 @@ void KeepAboveOutlineEffect::slotWindowMinimizedChanged(EffectWindow *w)
     effects->addRepaint(expandedGeometryFor(w));
 }
 
+void KeepAboveOutlineEffect::slotShowingDesktopChanged()
+{
+    // KWin's show-desktop animation does not minimize windows: it marks them
+    // hiddenByShowDesktop and transforms/fades them in a separate effect. The
+    // outline is painted at screen level, so explicitly damage its old band on
+    // both transitions instead of leaving it above the desktop.
+    repaintAllOutlines();
+}
+
 QRectF KeepAboveOutlineEffect::expandedGeometryFor(EffectWindow *w) const
 {
     const qreal bw = m_width;
@@ -277,22 +288,19 @@ bool KeepAboveOutlineEffect::isActive() const
 void KeepAboveOutlineEffect::prepareScreenPaint(ScreenPrePaintData &data)
 {
     for (EffectWindow *w : std::as_const(m_keepAboveWindows)) {
-        if (w->isMinimized()) {
+        if (w->isMinimized() || w->isHiddenByShowDesktop()) {
             // The outline sits in a band just *outside* the window's rectangle.
-            // When a window is minimized KWin only damages the window rectangle
-            // itself, not that surrounding band, so the outline would be left
-            // behind as a ghost. Repaint the band once, in the same pass the
-            // minimize produces, so the stale outline is painted over. We don't
-            // draw an outline for minimized windows in paintScreen(), so this
-            // just clears it.
-            if (!m_minimizedWindows.contains(w)) {
-                m_minimizedWindows.insert(w);
+            // Hiding a window only damages the window rectangle itself, not
+            // that surrounding band, so the outline would be left behind as a
+            // ghost. Repaint the band once in the same pass so it is cleared.
+            if (!m_suppressedWindows.contains(w)) {
+                m_suppressedWindows.insert(w);
                 data.paint += expandedGeometryFor(w).toRect();
             }
             continue;
         }
 
-        m_minimizedWindows.remove(w);
+        m_suppressedWindows.remove(w);
         // Make sure the border area is part of the region being painted this
         // frame, otherwise our outline would be scissored away.
         if (w->isOnCurrentDesktop()) {
@@ -333,7 +341,7 @@ void KeepAboveOutlineEffect::paintScreen(const RenderTarget &renderTarget,
     const auto stacking = effects->stackingOrder();
     for (EffectWindow *w : stacking) {
         if (!m_keepAboveWindows.contains(w) || w->isMinimized()
-            || !w->isOnCurrentDesktop()) {
+            || w->isHiddenByShowDesktop() || !w->isOnCurrentDesktop()) {
             continue;
         }
 

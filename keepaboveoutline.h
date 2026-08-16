@@ -67,6 +67,7 @@ private Q_SLOTS:
                                         const QRectF &oldGeometry);
     void slotWindowMinimizedChanged(KWin::EffectWindow *w);
     void slotWindowHiddenChanged(KWin::EffectWindow *w);
+    void slotShowingDesktopChanged();
 
 private:
     void prepareScreenPaint(ScreenPrePaintData &data);
@@ -94,10 +95,10 @@ private:
     // Outlines are suppressed while any of them is open so they don't compete
     // visually with shell UI layered above normal windows.
     QSet<EffectWindow *> m_openAppletPopups;
-    // Keep Above windows we have already seen as minimized. Used to detect the
-    // transition into the minimized state so the now-stale outline band can be
-    // repainted away exactly once.
-    QSet<EffectWindow *> m_minimizedWindows;
+    // Keep Above windows whose outline is currently suppressed. Used to detect
+    // when minimizing or showing the desktop first hides a window so the
+    // now-stale outline band can be repainted away exactly once.
+    QSet<EffectWindow *> m_suppressedWindows;
     QMap<EffectWindow *, QRectF> m_lastGeometry;
     QMap<EffectWindow *, OutlineCache> m_outlineCache;
 
