@@ -37,6 +37,12 @@ find_package(Qt6 REQUIRED COMPONENTS Core DBus Gui Widgets Quick)
 find_package(KF6 REQUIRED COMPONENTS CoreAddons ConfigWidgets KCMUtils)
 find_package(${KWIN_PACKAGE} REQUIRED)
 
+if(KWIN_BACKEND STREQUAL "WAYLAND")
+    set(DETECTED_KWIN_VERSION "${KWin_VERSION}")
+else()
+    set(DETECTED_KWIN_VERSION "${KWinX11_VERSION}")
+endif()
+
 # --- Effect plugin ---
 kcoreaddons_add_plugin(keep-above-outline
     SOURCES keepaboveoutline.cpp
@@ -47,9 +53,26 @@ target_link_libraries(keep-above-outline PRIVATE
 )
 
 if(KWIN_BACKEND STREQUAL "X11")
-    target_compile_definitions(keep-above-outline PRIVATE KEEPABOVE_X11)
+    target_compile_definitions(keep-above-outline PRIVATE
+        KEEPABOVE_X11
+        KEEPABOVE_LEGACY_PAINT_TYPES
+        KEEPABOVE_PREPAINT_PRESENT_TIME
+    )
     # KWin X11 6.7 headers use C++23 library types such as std::expected.
-    target_compile_features(keep-above-outline PRIVATE cxx_std_23)
+    if(DETECTED_KWIN_VERSION VERSION_GREATER_EQUAL "6.7")
+        target_compile_features(keep-above-outline PRIVATE cxx_std_23)
+    endif()
+else()
+    if(DETECTED_KWIN_VERSION VERSION_LESS "6.6")
+        target_compile_definitions(keep-above-outline PRIVATE
+            KEEPABOVE_LEGACY_PAINT_TYPES
+        )
+    endif()
+    if(DETECTED_KWIN_VERSION VERSION_LESS "6.7")
+        target_compile_definitions(keep-above-outline PRIVATE
+            KEEPABOVE_PREPAINT_PRESENT_TIME
+        )
+    endif()
 endif()
 
 # --- Config module plugin ---

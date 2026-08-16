@@ -11,7 +11,7 @@
 #include <opengl/glvertexbuffer.h>
 #include <core/rendertarget.h>
 #include <core/renderviewport.h>
-#ifndef KEEPABOVE_X11
+#ifndef KEEPABOVE_LEGACY_PAINT_TYPES
 #include <core/rect.h>
 #endif
 #include <KConfigGroup>
@@ -301,7 +301,7 @@ void KeepAboveOutlineEffect::prepareScreenPaint(ScreenPrePaintData &data)
     }
 }
 
-#ifdef KEEPABOVE_X11
+#ifdef KEEPABOVE_PREPAINT_PRESENT_TIME
 void KeepAboveOutlineEffect::prePaintScreen(ScreenPrePaintData &data,
                                             std::chrono::milliseconds presentTime)
 {

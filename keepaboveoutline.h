@@ -13,7 +13,7 @@
 namespace KWin
 {
 
-#ifdef KEEPABOVE_X11
+#ifdef KEEPABOVE_LEGACY_PAINT_TYPES
 using KeepAboveRegion = QRegion;
 using KeepAboveOutput = Output;
 #else
@@ -42,7 +42,7 @@ public:
     // PAINT_WINDOW_TRANSFORMED flag makes KWin's blur/background-contrast
     // effects skip the window — which cleared the blurred background behind
     // Keep Above windows. Painting at screen level avoids the flag entirely.
-#ifdef KEEPABOVE_X11
+#ifdef KEEPABOVE_PREPAINT_PRESENT_TIME
     void prePaintScreen(ScreenPrePaintData &data,
                         std::chrono::milliseconds presentTime) override;
 #else
