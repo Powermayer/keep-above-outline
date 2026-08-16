@@ -32,6 +32,32 @@ build-x11. It does not install anything itself. After every selected build
 succeeds, it prints the exact sudo cmake --install command that you may run.
 
 
+DEPENDENCIES
+------------------------
+**Arch / CachyOS / Manjaro**
+sudo pacman -S base-devel cmake extra-cmake-modules qt6-base kcoreaddons kconfig kconfigwidgets kcmutils vulkan-headers kwin
+
+# X11: kwin-x11
+
+**Debian / Ubuntu (KDE Neon, Kubuntu)**
+sudo apt install build-essential cmake extra-cmake-modules pkg-config qt6-base-dev qt6-declarative-dev 
+libkf6coreaddons-dev libkf6config-dev libkf6configwidgets-dev libkf6kcmutils-dev libvulkan-dev libdrm-dev kwin-wayland kwin-dev
+
+# X11: kwin-x11 kwin-x11-dev
+
+**Fedora / AlmaLinux / other Fedora-family distributions**
+sudo dnf install gcc-c++ cmake extra-cmake-modules qt6-qtbase-devel qt6-qtdeclarative-devel 
+kf6-kcoreaddons-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcmutils-devel wayland-devel 
+libepoxy-devel vulkan-headers libdrm-devel kwin kwin-devel
+
+**openSUSE Leap / Tumbleweed**
+sudo zypper install gcc-c++ cmake kf6-extra-cmake-modules qt6-base-devel qt6-declarative-devel 
+kf6-kcoreaddons-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcmutils-devel 
+kf6-kwindowsystem-devel wayland-devel libepoxy-devel libdrm-devel vulkan-headers kwin6 kwin6-devel
+
+# X11: kwin6-x11 kwin6-x11-devel
+
+
 MANUAL BUILD AND INSTALL
 ------------------------
 Run these commands from the project root folder.
@@ -72,13 +98,13 @@ Options:
 
 
 Uninstall from the build folder:
----------
+--------------------------------
 sudo xargs rm -f < build-wayland/install_manifest.txt
 sudo xargs rm -f < build-x11/install_manifest.txt
 
 
 Uninstall from anywhere:
----------
+------------------------
 Arch / CachyOS / Manjaro:
 
   sudo rm -f /usr/lib/qt6/plugins/kwin/effects/plugins/keep-above-outline.so \

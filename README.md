@@ -18,12 +18,12 @@ windows at a glance.
 ## Supported platforms
 
 - Wayland, X11
-- Plasma 6.4–6.7
+- Plasma 6.4 – 6.7
 
 ## Requirements
 
 - KDE Plasma 6 / KWin 6 (Wayland)
-- For X11: Plasma 6.4 through 6.7 and the distribution's KWin X11 runtime and
+- For X11: Plasma 6 and the distribution's KWin X11 runtime and
   development package
 - Qt 6 (Core, Gui, Widgets, Quick)
 - KF6 (CoreAddons, ConfigWidgets, KCMUtils)

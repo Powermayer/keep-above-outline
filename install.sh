@@ -196,7 +196,7 @@ if (( dependencies_missing )); then
     echo "Dependencies missing, install with:"
     print_dependency_guidance
     echo ""
-    echo "- Run this script again after installing."
+    echo "** Run this script again after installing. **"
     exit 1
 fi
 
@@ -234,7 +234,8 @@ for ((index = 1; index < ${#backend_names[@]}; ++index)); do
 done
 echo "-----------------------------------------------------"
 echo "Built successfully for: $backend_summary"
-echo "Install the effect with:"
+echo ""
+echo "** Install the effect with: **"
 
 install_command=""
 for index in "${!backend_values[@]}"; do
