@@ -1,42 +1,80 @@
 Keep Above Outline - Installation Guide
 ========================================
 
+SUPPORTED PLATFORMS
+-------------------
+- Wayland and X11
+- Plasma 6.4 through 6.7
+
+
 REQUIREMENTS
 ------------
-- KDE Plasma 6.7+
 - Qt 6 (Core, Gui, Widgets, Quick)
 - KF6 (CoreAddons, ConfigWidgets, KCMUtils)
 - Extra CMake Modules (ECM)
+- Wayland and libepoxy development headers (required transitively by KWin)
+- libdrm development headers when building for Wayland
+- pkg-config (used by KWin's dependency checks)
 - Vulkan headers (required transitively by KWin 6.7+)
-- C++20 compiler (GCC or Clang)
+- C++20 compiler for Wayland; KWin X11 6.7 requires C++23
 - CMake >= 3.20
 
 
-INSTALL DEPENDENCIES
---------------------
+GUIDED BUILD AND INSTALL
+------------------------
+Run this script from the unzipped effect folder without elevated privileges:
 
-Arch / CachyOS / Manjaro:
-  sudo pacman -S extra-cmake-modules kwin kcmutils kconfigwidgets qt6-base vulkan-headers
+  ./install.sh
 
-Debian / Ubuntu (KDE Neon, Kubuntu):
-  sudo apt install extra-cmake-modules kwin-dev libkf6kcmutils-dev libkf6configwidgets-dev qt6-base-dev libvulkan-dev
-
-Fedora:
-  sudo dnf install extra-cmake-modules kwin-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-qtbase-devel vulkan-headers
-
-openSUSE Tumbleweed:
-  sudo zypper install extra-cmake-modules kwin6-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-base-devel vulkan-headers
+The script checks dependencies and detects every installed supported KWin
+compositor. It configures and builds Wayland in build-wayland and X11 in
+build-x11. It does not install anything itself. After every selected build
+succeeds, it prints the exact sudo cmake --install command that you may run.
 
 
-BUILD (Run commands from the project root folder)
------
-  cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
-  cmake --build build
+DEPENDENCIES
+------------------------
+**Arch / CachyOS / Manjaro**
+sudo pacman -S base-devel cmake extra-cmake-modules qt6-base kcoreaddons kconfig kconfigwidgets kcmutils vulkan-headers kwin
+
+# X11: kwin-x11
+
+**Debian / Ubuntu (KDE Neon, Kubuntu)**
+sudo apt install build-essential cmake extra-cmake-modules pkg-config qt6-base-dev qt6-declarative-dev 
+libkf6coreaddons-dev libkf6config-dev libkf6configwidgets-dev libkf6kcmutils-dev libvulkan-dev libdrm-dev kwin-wayland kwin-dev
+
+# X11: kwin-x11 kwin-x11-dev
+
+**Fedora / AlmaLinux / other Fedora-family distributions**
+sudo dnf install gcc-c++ cmake extra-cmake-modules qt6-qtbase-devel qt6-qtdeclarative-devel 
+kf6-kcoreaddons-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcmutils-devel wayland-devel 
+libepoxy-devel vulkan-headers libdrm-devel kwin kwin-devel
+
+**openSUSE Leap / Tumbleweed**
+sudo zypper install gcc-c++ cmake kf6-extra-cmake-modules qt6-base-devel qt6-declarative-devel 
+kf6-kcoreaddons-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcmutils-devel 
+kf6-kwindowsystem-devel wayland-devel libepoxy-devel libdrm-devel vulkan-headers kwin6 kwin6-devel
+
+# X11: kwin6-x11 kwin6-x11-devel
 
 
-INSTALL
--------
-  sudo cmake --install build
+MANUAL BUILD AND INSTALL
+------------------------
+Run these commands from the project root folder.
+
+Wayland:
+
+  cmake -B build-wayland -S . -DKWIN_BACKEND=WAYLAND -DCMAKE_BUILD_TYPE=Release &&
+  cmake --build build-wayland &&
+  sudo cmake --install build-wayland
+
+X11:
+
+  cmake -B build-x11 -S . -DKWIN_BACKEND=X11 -DCMAKE_BUILD_TYPE=Release &&
+  cmake --build build-x11 &&
+  sudo cmake --install build-x11
+
+Do not reuse one build directory for the other backend.
 
 
 ENABLE THE EFFECT
@@ -47,37 +85,43 @@ ENABLE THE EFFECT
 4. Click the gear icon to configure color, border width, and corner radius.
 
 
-UNINSTALL
----------
-CMake has no built-in uninstall command, so the two installed plugin files
-have to be removed by hand. Their location depends on the distro's Qt6 plugin
-directory:
-
-Arch / CachyOS / Manjaro:
-  sudo rm -f /usr/lib/qt6/plugins/kwin/effects/plugins/keep-above-outline.so \
-             /usr/lib/qt6/plugins/kwin/effects/configs/kwin_keep-above-outline_config.so
-
-Fedora / openSUSE Tumbleweed:
-  sudo rm -f /usr/lib64/qt6/plugins/kwin/effects/plugins/keep-above-outline.so \
-             /usr/lib64/qt6/plugins/kwin/effects/configs/kwin_keep-above-outline_config.so
-
-Debian / Ubuntu (KDE Neon, Kubuntu):
-  sudo rm -f /usr/lib/x86_64-linux-gnu/qt6/plugins/kwin/effects/plugins/keep-above-outline.so \
-             /usr/lib/x86_64-linux-gnu/qt6/plugins/kwin/effects/configs/kwin_keep-above-outline_config.so
-
-Or, on any distro, remove exactly the files recorded when you ran
-"cmake --install build":
-  sudo xargs rm -f < build/install_manifest.txt
-
-
 CONFIGURATION
 -------------
 Settings are stored in kwinrc under the [Effect-keep-above-outline] group.
-You can also edit them directly:
-  ~/.config/kwinrc
+You can also edit them directly in ~/.config/kwinrc.
 
 Options:
   UseAccentColor  - Follow the current Plasma accent color (default: true)
   CustomColor     - Color used when UseAccentColor is disabled (default: #3daee9)
   BorderWidth     - Outline thickness in pixels, 1-20 (default: 3)
   BorderRadius    - Corner radius in pixels, 0-30 (default: 0)
+
+
+Uninstall from the build folder:
+--------------------------------
+sudo xargs rm -f < build-wayland/install_manifest.txt
+sudo xargs rm -f < build-x11/install_manifest.txt
+
+
+Uninstall from anywhere:
+------------------------
+Arch / CachyOS / Manjaro:
+
+  sudo rm -f /usr/lib/qt6/plugins/kwin/effects/plugins/keep-above-outline.so \
+             /usr/lib/qt6/plugins/kwin/effects/configs/kwin_keep-above-outline_config.so \
+             /usr/lib/qt6/plugins/kwin-x11/effects/plugins/keep-above-outline.so \
+             /usr/lib/qt6/plugins/kwin-x11/effects/configs/kwin_keep-above-outline_config.so
+
+Fedora / openSUSE Tumbleweed:
+
+  sudo rm -f /usr/lib64/qt6/plugins/kwin/effects/plugins/keep-above-outline.so \
+             /usr/lib64/qt6/plugins/kwin/effects/configs/kwin_keep-above-outline_config.so \
+             /usr/lib64/qt6/plugins/kwin-x11/effects/plugins/keep-above-outline.so \
+             /usr/lib64/qt6/plugins/kwin-x11/effects/configs/kwin_keep-above-outline_config.so
+
+Debian / Ubuntu (KDE Neon, Kubuntu):
+
+  sudo rm -f /usr/lib/x86_64-linux-gnu/qt6/plugins/kwin/effects/plugins/keep-above-outline.so \
+             /usr/lib/x86_64-linux-gnu/qt6/plugins/kwin/effects/configs/kwin_keep-above-outline_config.so \
+             /usr/lib/x86_64-linux-gnu/qt6/plugins/kwin-x11/effects/plugins/keep-above-outline.so \
+             /usr/lib/x86_64-linux-gnu/qt6/plugins/kwin-x11/effects/configs/kwin_keep-above-outline_config.so

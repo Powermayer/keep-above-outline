@@ -11,7 +11,9 @@
 #include <opengl/glvertexbuffer.h>
 #include <core/rendertarget.h>
 #include <core/renderviewport.h>
+#ifndef KEEPABOVE_LEGACY_PAINT_TYPES
 #include <core/rect.h>
+#endif
 #include <KConfigGroup>
 #include <QGuiApplication>
 #include <QPalette>
@@ -36,7 +38,12 @@ KeepAboveOutlineEffect::KeepAboveOutlineEffect()
                 this, &KeepAboveOutlineEffect::slotWindowFrameGeometryChanged);
         connect(w, &EffectWindow::minimizedChanged,
                 this, &KeepAboveOutlineEffect::slotWindowMinimizedChanged);
-        if (w->keepAbove() && !w->isDesktop() && !w->isDock()) {
+        connect(w, &EffectWindow::windowHiddenChanged,
+                this, &KeepAboveOutlineEffect::slotWindowHiddenChanged);
+        if (w->isAppletPopup() && w->isVisible()) {
+            m_openAppletPopups.insert(w);
+        }
+        if (shouldOutlineWindow(w)) {
             m_keepAboveWindows.insert(w);
         }
     }
@@ -45,6 +52,8 @@ KeepAboveOutlineEffect::KeepAboveOutlineEffect()
             this, &KeepAboveOutlineEffect::slotWindowAdded);
     connect(effects, &EffectsHandler::windowDeleted,
             this, &KeepAboveOutlineEffect::slotWindowDeleted);
+    connect(effects, &EffectsHandler::showingDesktopChanged,
+            this, &KeepAboveOutlineEffect::slotShowingDesktopChanged);
 }
 
 bool KeepAboveOutlineEffect::supported()
@@ -79,25 +88,72 @@ void KeepAboveOutlineEffect::slotWindowAdded(EffectWindow *w)
             this, &KeepAboveOutlineEffect::slotWindowFrameGeometryChanged);
     connect(w, &EffectWindow::minimizedChanged,
             this, &KeepAboveOutlineEffect::slotWindowMinimizedChanged);
+    connect(w, &EffectWindow::windowHiddenChanged,
+            this, &KeepAboveOutlineEffect::slotWindowHiddenChanged);
 
-    if (w->keepAbove() && !w->isDesktop() && !w->isDock()) {
+    if (w->isAppletPopup() && w->isVisible()) {
+        m_openAppletPopups.insert(w);
+        repaintAllOutlines();
+    }
+
+    if (shouldOutlineWindow(w)) {
         m_keepAboveWindows.insert(w);
         effects->addRepaint(expandedGeometryFor(w));
     }
 }
 
+bool KeepAboveOutlineEffect::shouldOutlineWindow(EffectWindow *w) const
+{
+    // Plasma applet popups, including the application launcher, are kept above
+    // by the shell itself. That is not a user-applied Keep Above state and
+    // should not receive an outline.
+    return w->keepAbove() && !w->isDesktop() && !w->isDock()
+        && !w->isAppletPopup();
+}
+
 void KeepAboveOutlineEffect::slotWindowDeleted(EffectWindow *w)
 {
+    const bool popupWasOpen = m_openAppletPopups.remove(w);
     m_keepAboveWindows.remove(w);
-    m_minimizedWindows.remove(w);
+    m_suppressedWindows.remove(w);
     m_lastGeometry.remove(w);
     m_outlineCache.remove(w);
+    if (popupWasOpen) {
+        repaintAllOutlines();
+    }
+}
+
+void KeepAboveOutlineEffect::slotWindowHiddenChanged(EffectWindow *w)
+{
+    if (!w->isAppletPopup()) {
+        return;
+    }
+
+    const bool wasOpen = m_openAppletPopups.contains(w);
+    const bool isOpen = w->isVisible();
+    if (wasOpen == isOpen) {
+        return;
+    }
+
+    if (isOpen) {
+        m_openAppletPopups.insert(w);
+    } else {
+        m_openAppletPopups.remove(w);
+    }
+    repaintAllOutlines();
+}
+
+void KeepAboveOutlineEffect::repaintAllOutlines()
+{
+    for (EffectWindow *w : std::as_const(m_keepAboveWindows)) {
+        effects->addRepaint(expandedGeometryFor(w));
+    }
 }
 
 void KeepAboveOutlineEffect::renderOutline(const RenderTarget &renderTarget,
                                            const RenderViewport &viewport,
                                            const OutlineCache &cache,
-                                           const Region &clipRegion)
+                                           const KeepAboveRegion &clipRegion)
 {
     if (cache.borderVerts.isEmpty()) {
         return;
@@ -172,11 +228,11 @@ void KeepAboveOutlineEffect::cacheWindowOutline(EffectWindow *w, const QRectF &g
 
 void KeepAboveOutlineEffect::slotKeepAboveChanged(EffectWindow *w)
 {
-    if (w->keepAbove() && !w->isDesktop() && !w->isDock()) {
+    if (shouldOutlineWindow(w)) {
         m_keepAboveWindows.insert(w);
     } else {
         m_keepAboveWindows.remove(w);
-        m_minimizedWindows.remove(w);
+        m_suppressedWindows.remove(w);
         m_lastGeometry.remove(w);
         m_outlineCache.remove(w);
     }
@@ -209,6 +265,15 @@ void KeepAboveOutlineEffect::slotWindowMinimizedChanged(EffectWindow *w)
     effects->addRepaint(expandedGeometryFor(w));
 }
 
+void KeepAboveOutlineEffect::slotShowingDesktopChanged()
+{
+    // KWin's show-desktop animation does not minimize windows: it marks them
+    // hiddenByShowDesktop and transforms/fades them in a separate effect. The
+    // outline is painted at screen level, so explicitly damage its old band on
+    // both transitions instead of leaving it above the desktop.
+    repaintAllOutlines();
+}
+
 QRectF KeepAboveOutlineEffect::expandedGeometryFor(EffectWindow *w) const
 {
     const qreal bw = m_width;
@@ -220,41 +285,54 @@ bool KeepAboveOutlineEffect::isActive() const
     return !m_keepAboveWindows.isEmpty();
 }
 
-void KeepAboveOutlineEffect::prePaintScreen(ScreenPrePaintData &data)
+void KeepAboveOutlineEffect::prepareScreenPaint(ScreenPrePaintData &data)
 {
     for (EffectWindow *w : std::as_const(m_keepAboveWindows)) {
-        if (w->isMinimized()) {
+        if (w->isMinimized() || w->isHiddenByShowDesktop()) {
             // The outline sits in a band just *outside* the window's rectangle.
-            // When a window is minimized KWin only damages the window rectangle
-            // itself, not that surrounding band, so the outline would be left
-            // behind as a ghost. Repaint the band once, in the same pass the
-            // minimize produces, so the stale outline is painted over. We don't
-            // draw an outline for minimized windows in paintScreen(), so this
-            // just clears it.
-            if (!m_minimizedWindows.contains(w)) {
-                m_minimizedWindows.insert(w);
+            // Hiding a window only damages the window rectangle itself, not
+            // that surrounding band, so the outline would be left behind as a
+            // ghost. Repaint the band once in the same pass so it is cleared.
+            if (!m_suppressedWindows.contains(w)) {
+                m_suppressedWindows.insert(w);
                 data.paint += expandedGeometryFor(w).toRect();
             }
             continue;
         }
 
-        m_minimizedWindows.remove(w);
+        m_suppressedWindows.remove(w);
         // Make sure the border area is part of the region being painted this
         // frame, otherwise our outline would be scissored away.
-        data.paint += expandedGeometryFor(w).toRect();
+        if (w->isOnCurrentDesktop()) {
+            data.paint += expandedGeometryFor(w).toRect();
+        }
     }
+}
+
+#ifdef KEEPABOVE_PREPAINT_PRESENT_TIME
+void KeepAboveOutlineEffect::prePaintScreen(ScreenPrePaintData &data,
+                                            std::chrono::milliseconds presentTime)
+{
+    prepareScreenPaint(data);
+    effects->prePaintScreen(data, presentTime);
+}
+#else
+void KeepAboveOutlineEffect::prePaintScreen(ScreenPrePaintData &data)
+{
+    prepareScreenPaint(data);
     effects->prePaintScreen(data);
 }
+#endif
 
 void KeepAboveOutlineEffect::paintScreen(const RenderTarget &renderTarget,
                                          const RenderViewport &viewport,
                                          int mask,
-                                         const Region &deviceRegion,
-                                         LogicalOutput *screen)
+                                         const KeepAboveRegion &deviceRegion,
+                                         KeepAboveOutput *screen)
 {
     effects->paintScreen(renderTarget, viewport, mask, deviceRegion, screen);
 
-    if (m_keepAboveWindows.isEmpty()) {
+    if (m_keepAboveWindows.isEmpty() || !m_openAppletPopups.isEmpty()) {
         return;
     }
 
@@ -262,7 +340,8 @@ void KeepAboveOutlineEffect::paintScreen(const RenderTarget &renderTarget,
     // order so a higher Keep Above window's outline lands above a lower one's.
     const auto stacking = effects->stackingOrder();
     for (EffectWindow *w : stacking) {
-        if (!m_keepAboveWindows.contains(w) || w->isMinimized()) {
+        if (!m_keepAboveWindows.contains(w) || w->isMinimized()
+            || w->isHiddenByShowDesktop() || !w->isOnCurrentDesktop()) {
             continue;
         }
 

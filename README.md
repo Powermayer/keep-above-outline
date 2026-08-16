@@ -15,49 +15,81 @@ windows at a glance.
 - Adjustable border width (1–20 px) and corner radius (0–30 px).
 - Configurable through System Settings → Window Management → Desktop Effects.
 
+## Supported platforms
+
+- Wayland, X11
+- Plasma 6.4 – 6.7
+
 ## Requirements
 
-- KDE Plasma 6 / KWin 6
+- KDE Plasma 6 / KWin 6 (Wayland)
+- For X11: Plasma 6 and the distribution's KWin X11 runtime and
+  development package
 - Qt 6 (Core, Gui, Widgets, Quick)
 - KF6 (CoreAddons, ConfigWidgets, KCMUtils)
 - Extra CMake Modules (ECM)
+- Wayland and libepoxy development headers (required transitively by KWin)
+- libdrm development headers when building the Wayland effect
 - Vulkan headers (required transitively by KWin 6.7+)
-- A C++20 compiler
+- A C++20 compiler for Wayland; the KWin X11 6.7 headers require C++23
 - CMake ≥ 3.20
 
+## Guided build and install
+
+Run this script from the unzipped effect folder without elevated privileges.
+The script does not install anything itself. It builds the effect, reports
+missing dependencies, and provides the required terminal commands.
+
+```sh
+./install.sh
+```
+
+## Manual build and install
+
+### Dependencies
 
 **Arch / CachyOS / Manjaro**
 ```sh
-sudo pacman -S extra-cmake-modules kwin kcmutils kconfigwidgets qt6-base vulkan-headers
+sudo pacman -S base-devel cmake extra-cmake-modules qt6-base kcoreaddons kconfig kconfigwidgets kcmutils vulkan-headers
+# Wayland (runtime and headers): kwin
+# X11 (runtime and headers): kwin-x11
 ```
 
 **Debian / Ubuntu (KDE Neon, Kubuntu)**
 ```sh
-sudo apt install extra-cmake-modules kwin-dev libkf6kcmutils-dev libkf6configwidgets-dev qt6-base-dev libvulkan-dev
+sudo apt install build-essential cmake extra-cmake-modules pkg-config qt6-base-dev qt6-declarative-dev libkf6coreaddons-dev libkf6config-dev libkf6configwidgets-dev libkf6kcmutils-dev libvulkan-dev
+# Wayland: libdrm-dev kwin-wayland kwin-dev
+# X11: kwin-x11 kwin-x11-dev
 ```
 
-**Fedora**
+**Fedora / AlmaLinux / other Fedora-family distributions**
 ```sh
-sudo dnf install extra-cmake-modules kwin-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-qtbase-devel vulkan-headers
+sudo dnf install gcc-c++ cmake extra-cmake-modules qt6-qtbase-devel qt6-qtdeclarative-devel kf6-kcoreaddons-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcmutils-devel wayland-devel libepoxy-devel vulkan-headers
+# Wayland: libdrm-devel kwin kwin-devel
+# X11: kwin-x11 kwin-x11-devel
 ```
 
-**openSUSE Tumbleweed**
+**openSUSE Leap / Tumbleweed**
 ```sh
-sudo zypper install extra-cmake-modules kwin6-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-base-devel vulkan-headers
+sudo zypper install gcc-c++ cmake kf6-extra-cmake-modules qt6-base-devel qt6-declarative-devel kf6-kcoreaddons-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcmutils-devel kf6-kwindowsystem-devel wayland-devel libepoxy-devel libdrm-devel vulkan-headers
+# Wayland: kwin6 kwin6-devel
+# X11: kwin6-x11 kwin6-x11-devel
 ```
 
-
-## Building
+### Build and install (Wayland)
 
 ```sh
-cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
-cmake --build build
+cmake -B build-wayland -S . -DKWIN_BACKEND=WAYLAND -DCMAKE_BUILD_TYPE=Release &&
+cmake --build build-wayland &&
+sudo cmake --install build-wayland
 ```
 
-## Installing
+### Build and install (X11)
 
 ```sh
-sudo cmake --install build
+cmake -B build-x11 -S . -DKWIN_BACKEND=X11 -DCMAKE_BUILD_TYPE=Release &&
+cmake --build build-x11 &&
+sudo cmake --install build-x11
 ```
 
 ## Enabling the effect
@@ -84,7 +116,14 @@ Settings are stored in `kwinrc` under the `[Effect-keep-above-outline]` group.
 - `keepaboveoutline_config.{h,cpp,ui}` — the System Settings configuration module.
 - `keepaboveoutlineconfig.kcfg` — schema for the persisted settings.
 - `metadata.json` — KPlugin metadata used by KWin to load the effect.
-- `CMakeLists.txt` — build definitions for both plugins.
+- `CMakeLists.txt` — backend-selectable build definitions for both plugins.
+- `install.sh` — unprivileged dependency checker and multi-backend build helper.
+
+## Release policy
+
+Source releases contain both implementations. If prebuilt binaries are
+published, Wayland and X11 artifacts are labeled separately because they are
+not interchangeable.
 
 ## License
 

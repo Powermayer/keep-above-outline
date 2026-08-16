@@ -9,6 +9,8 @@
 #include <KColorScheme>
 #include <KConfigSkeleton>
 #include <KPluginFactory>
+#include <QDBusConnection>
+#include <QDBusMessage>
 
 K_PLUGIN_CLASS(KeepAboveOutlineConfig)
 
@@ -42,6 +44,19 @@ KeepAboveOutlineConfig::KeepAboveOutlineConfig(QObject *parent, const KPluginMet
     };
     connect(m_ui->kcfg_UseAccentColor, &QCheckBox::toggled, this, updateColorEnabled);
     updateColorEnabled();
+}
+
+void KeepAboveOutlineConfig::save()
+{
+    KCModule::save();
+
+    QDBusMessage message = QDBusMessage::createMethodCall(
+        QStringLiteral("org.kde.KWin"),
+        QStringLiteral("/Effects"),
+        QStringLiteral("org.kde.kwin.Effects"),
+        QStringLiteral("reconfigureEffect"));
+    message << QStringLiteral("keep-above-outline");
+    QDBusConnection::sessionBus().call(message, QDBus::NoBlock);
 }
 
 #include "keepaboveoutline_config.moc"
