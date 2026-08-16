@@ -12,7 +12,8 @@ REQUIREMENTS
 - Qt 6 (Core, Gui, Widgets, Quick)
 - KF6 (CoreAddons, ConfigWidgets, KCMUtils)
 - Extra CMake Modules (ECM)
-- Wayland development headers when building for Wayland
+- Wayland and libepoxy development headers (required transitively by KWin)
+- libdrm development headers when building for Wayland
 - Vulkan headers (required transitively by KWin 6.7+)
 - C++20 compiler for Wayland; KWin X11 6.7 requires C++23
 - CMake >= 3.20

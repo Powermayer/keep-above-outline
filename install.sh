@@ -111,11 +111,12 @@ print_dependency_guidance()
             packages=(gcc-c++ cmake extra-cmake-modules qt6-qtbase-devel
                       qt6-qtdeclarative-devel kf6-kcoreaddons-devel
                       kf6-kconfig-devel kf6-kconfigwidgets-devel
-                      kf6-kcmutils-devel vulkan-headers)
-            # KWinConfig.cmake requires Wayland's Server component. Some
+                      kf6-kcmutils-devel wayland-devel libepoxy-devel
+                      vulkan-headers)
+            # KWin's exported CMake config requires these libraries. Some
             # Fedora-family kwin-devel packages, including AlmaLinux 10's, do
-            # not declare that dependency, so keep it explicit here.
-            (( include_wayland )) && packages+=(wayland-devel kwin kwin-devel)
+            # not declare all of their development packages as dependencies.
+            (( include_wayland )) && packages+=(libdrm-devel kwin kwin-devel)
             (( include_x11 )) && packages+=(kwin-x11 kwin-x11-devel)
             printf 'sudo dnf install'
             ;;
