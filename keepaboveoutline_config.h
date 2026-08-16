@@ -19,6 +19,8 @@ class KeepAboveOutlineConfig : public KCModule
 public:
     explicit KeepAboveOutlineConfig(QObject *parent, const KPluginMetaData &data);
 
+    void save() override;
+
 private:
     Ui::KeepAboveOutlineConfigForm *m_ui;
 };
