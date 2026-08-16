@@ -57,8 +57,8 @@ sudo pacman -S base-devel cmake extra-cmake-modules qt6-base kcoreaddons kconfig
 
 **Debian / Ubuntu (KDE Neon, Kubuntu)**
 ```sh
-sudo apt install build-essential cmake extra-cmake-modules qt6-base-dev qt6-declarative-dev libkf6coreaddons-dev libkf6config-dev libkf6configwidgets-dev libkf6kcmutils-dev libvulkan-dev
-# Wayland: kwin-wayland kwin-dev
+sudo apt install build-essential cmake extra-cmake-modules pkg-config qt6-base-dev qt6-declarative-dev libkf6coreaddons-dev libkf6config-dev libkf6configwidgets-dev libkf6kcmutils-dev libvulkan-dev
+# Wayland: libdrm-dev kwin-wayland kwin-dev
 # X11: kwin-x11 kwin-x11-dev
 ```
 

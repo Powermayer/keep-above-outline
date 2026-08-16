@@ -102,8 +102,12 @@ print_dependency_guidance()
         debian)
             packages=(build-essential cmake extra-cmake-modules qt6-base-dev
                       qt6-declarative-dev libkf6coreaddons-dev libkf6config-dev
-                      libkf6configwidgets-dev libkf6kcmutils-dev libvulkan-dev)
-            (( include_wayland )) && packages+=(kwin-wayland kwin-dev)
+                      libkf6configwidgets-dev libkf6kcmutils-dev libvulkan-dev
+                      pkg-config)
+            # KWinConfig.cmake looks up libdrm directly when configuring a
+            # Wayland effect.  kwin-dev on Ubuntu does not pull in the libdrm
+            # development package, so it must be requested explicitly.
+            (( include_wayland )) && packages+=(libdrm-dev kwin-wayland kwin-dev)
             (( include_x11 )) && packages+=(kwin-x11 kwin-x11-dev)
             printf 'sudo apt install'
             ;;

@@ -14,6 +14,7 @@ REQUIREMENTS
 - Extra CMake Modules (ECM)
 - Wayland and libepoxy development headers (required transitively by KWin)
 - libdrm development headers when building for Wayland
+- pkg-config (used by KWin's dependency checks)
 - Vulkan headers (required transitively by KWin 6.7+)
 - C++20 compiler for Wayland; KWin X11 6.7 requires C++23
 - CMake >= 3.20
