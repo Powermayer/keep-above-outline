@@ -18,7 +18,11 @@ windows at a glance.
 ## Supported platforms
 
 - Wayland, X11
-- Plasma 6.4 – 6.7
+- Plasma 6.4 – 6.8
+
+The build selects the effect API for the installed KWin version and backend,
+including the Wayland rendering changes in KWin 6.8. Rebuild and reinstall the
+effect after upgrading KWin.
 
 ## Requirements
 

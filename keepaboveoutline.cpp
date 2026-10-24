@@ -324,14 +324,34 @@ void KeepAboveOutlineEffect::prePaintScreen(ScreenPrePaintData &data)
 }
 #endif
 
+#ifdef KEEPABOVE_PAINT_SCREEN_RETURNS_BOOL
+bool KeepAboveOutlineEffect::paintScreen(const RenderTarget &renderTarget,
+#else
 void KeepAboveOutlineEffect::paintScreen(const RenderTarget &renderTarget,
+#endif
                                          const RenderViewport &viewport,
                                          int mask,
                                          const KeepAboveRegion &deviceRegion,
                                          KeepAboveOutput *screen)
 {
+#ifdef KEEPABOVE_PAINT_SCREEN_RETURNS_BOOL
+    // A failed paint (e.g. after a GPU reset) must stop the effect chain's
+    // rendering immediately, before we issue any outline draw calls.
+    if (!effects->paintScreen(renderTarget, viewport, mask, deviceRegion, screen)) {
+        return false;
+    }
+    paintOutlines(renderTarget, viewport, deviceRegion);
+    return true;
+#else
     effects->paintScreen(renderTarget, viewport, mask, deviceRegion, screen);
+    paintOutlines(renderTarget, viewport, deviceRegion);
+#endif
+}
 
+void KeepAboveOutlineEffect::paintOutlines(const RenderTarget &renderTarget,
+                                           const RenderViewport &viewport,
+                                           const KeepAboveRegion &deviceRegion)
+{
     if (m_keepAboveWindows.isEmpty() || !m_openAppletPopups.isEmpty()) {
         return;
     }
