@@ -63,6 +63,12 @@ if(KWIN_BACKEND STREQUAL "X11")
         target_compile_features(keep-above-outline PRIVATE cxx_std_23)
     endif()
 else()
+    # KWin 6.8 propagates rendering failures through the Wayland effect chain.
+    if(DETECTED_KWIN_VERSION VERSION_GREATER_EQUAL "6.8")
+        target_compile_definitions(keep-above-outline PRIVATE
+            KEEPABOVE_PAINT_SCREEN_RETURNS_BOOL
+        )
+    endif()
     if(DETECTED_KWIN_VERSION VERSION_LESS "6.6")
         target_compile_definitions(keep-above-outline PRIVATE
             KEEPABOVE_LEGACY_PAINT_TYPES

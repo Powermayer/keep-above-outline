@@ -4,7 +4,10 @@ Keep Above Outline - Installation Guide
 SUPPORTED PLATFORMS
 -------------------
 - Wayland and X11
-- Plasma 6.4 through 6.7
+- Plasma 6.4 through 6.8
+
+The build selects the effect API for the installed KWin version and backend.
+Rebuild and reinstall the effect after upgrading KWin.
 
 
 REQUIREMENTS

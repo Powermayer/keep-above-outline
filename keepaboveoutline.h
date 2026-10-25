@@ -49,7 +49,11 @@ public:
     void prePaintScreen(ScreenPrePaintData &data) override;
 #endif
 
+#ifdef KEEPABOVE_PAINT_SCREEN_RETURNS_BOOL
+    bool paintScreen(const RenderTarget &renderTarget,
+#else
     void paintScreen(const RenderTarget &renderTarget,
+#endif
                      const RenderViewport &viewport,
                      int mask,
                      const KeepAboveRegion &deviceRegion,
@@ -71,6 +75,9 @@ private Q_SLOTS:
 
 private:
     void prepareScreenPaint(ScreenPrePaintData &data);
+    void paintOutlines(const RenderTarget &renderTarget,
+                       const RenderViewport &viewport,
+                       const KeepAboveRegion &deviceRegion);
     bool shouldOutlineWindow(EffectWindow *w) const;
     void repaintAllOutlines();
 
